@@ -1,23 +1,28 @@
-FROM node:20
+FROM node:20-alpine AS builder
 
-# Create app directory
-WORKDIR /app
+WORKDRIR /app
 
-# Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+RUN npm ci
 
-# Copy app source
 COPY . .
 
-# Build Next.js application
+
 RUN npm run build
 
-# Expose Next.js port
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+
+ENV NODE_ENV=production
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+
 EXPOSE 5000
 
-# Start production server
-CMD ["npm", "start"]
-
+CMD ["node", "server.js"]
